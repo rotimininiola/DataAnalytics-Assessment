@@ -9,7 +9,7 @@ To solve this, I aimed to summarize each user's funding activity across both sav
 
 I used the plans_plan table to count the number of funded savings and investment plans, distinguishing between them using the is_regular_savings and is_a_fund flags respectively.
 A plan was considered "funded" if it had a positive amount and was not marked as deleted (is_deleted = 0).
-To calculate total deposits, I joined the savings_savingsaccount table which acts more like a transaction log, and summed the confirmed_amount for transactions with a status of 'success', 'successful', or 'monnify_success'. This ensured only actual successful inflows were counted.
+To calculate total deposits, I joined the savings_savingsaccount table which acts more like a transaction log, and summed the confirmed_amount for transactions. Made use of a Coalesce function to handle Nulls in the confirmed_amount columns. And regex function to identify the successful transactions.
 
 🚧 Challenges:
 1. Inactive or Deleted Plans: Initially, some plans appeared in the dataset but were not active. I resolved this by filtering out plans where is_deleted = 1.
@@ -23,18 +23,20 @@ The objective of this query was to analyze the customer transaction performance 
 
 I focused on transactions from the savings_savingsaccount table and linked them with user data from the users_customuser table.
 
-Only successful transactions were considered to ensure accuracy in measuring actual customer activity. This included transactions with statuses 'success', 'successful', and 'monnify_success'. I grouped the query into 2 CTEs to properly capture logic.
+Regex function was used to include only successful transactions to ensure accuracy in measuring actual customer activity. This included transactions with statuses 'success', 'successful', and 'monnify_success'. I grouped the query into 2 CTEs to properly capture logic.
 
-1. The first CTE transactions computes the transactional metrics for each of the user.
-For each customer, I calculated number of successful transactions, number of active months.
+1. The first CTE transactions computes the transactional metrics for each of the user. 
+For each customer, I calculated number of successful transactions, using regex to consider successful transactions.
+The active months was also captured, using the Greatest function ensuring a month is picked even if a customer made all transactions in a month.
 
-2. The second CTE customers_category assigns a frequency category and keeps the average transactions per month.
+3. The second CTE customers_category assigns a frequency category and keeps the average transactions per month.
 Customers were grouped into the buckets:
 High Frequency (10+ transactions/month)
 Medium Frequency (3–9 transactions/month)
 Low Frequency (<3 transactions/month)
+The average number of transactions per month was also captured with safety checks to avoid division by null values.
 
-3. The last query groups by frequency_category to get the count of customers in each group and the average of their average monthly transaction counts.
+5. The last query groups by frequency_category to get the count of customers in each group and the average of their average monthly transaction counts.
 
 Why CTE?
 I used a Common Table Expression (CTE) to break the logic into manageable steps:
@@ -49,17 +51,26 @@ I used MAX(s.transaction_date) from the savings_savingsaccount table to determin
 Only plans marked as is_regular_savings = 1 and active (is_deleted = 0) were considered for savings. 
 Only plans marked as is_a_fund = 1 for and active (is_deleted = 0) were considered for investments.
 Plans were flagged as inactive if their most recent transaction was over a year ago.
+Regex function was used to include only successful transactions.
 
 🚧 Challenges:
-Identifying the most reliable transaction date 
+Identifying the most reliable transaction date as there was a last_charge_date in plans table and transaction_date in savings table
 
 ### Assessment_Q4
 #### Customer Lifetime Value (CLV) Estimation
-To estimate the CLV, my approach was first calculating how long the customers joined Cowrywise using the difference between the current date and the date_joined in the users_customuser table. I also computed the total successful transactions (counting the saving_id), amount(adding confirmed_amount) and average transaction value(amount/no of transactions done) for each customer using the savings_savingsaccount table. 
+To estimate CLV, I started by calculating each customer's tenure on Cowrywise using the difference between the current date and their date_joined value from the users_customuser table.
 
-I got the average monthly transaction frequency using total_transactions / tenure_month(the nunber of months customer got activated).
-Then multiplied the monthly frequency by 12 to get an annual transaction frequency.
-Multiplied that by the avg_transaction_value to estimate how much value a customer might generate in a year.
-Then used the ROUND function for a cleaner output.
+From the savings_savingsaccount table, I computed the following for each customer:
+
+Total successful transactions by counting savings_id.
+Total transaction amount, using SUM(confirmed_amount) with the COALESCE function to handle NULL values.
+Average transaction value, calculated as the total confirmed amount divided by the number of transactions.
+
+To ensure accuracy, I filtered only successful transactions using a REGEXP condition that matched variations of "success" in lowercase.
+
+Next, I calculated the average monthly transaction frequency as total_transactions / tenure_months
+Then multiplied this monthly frequency by 12 to estimate annual transaction frequency.
+Multiplied the result by the average transaction value to derive an estimated Customer Lifetime Value (CLV).
+Applied the ROUND function to format the final output to two decimal places for better readability.
 
 #### Check files section for sql files
