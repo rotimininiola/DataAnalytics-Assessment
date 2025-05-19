@@ -22,18 +22,22 @@ The objective of this query was to analyze the customer transaction performance 
 
 I focused on transactions from the savings_savingsaccount table and linked them with user data from the users_customuser table.
 
-Only successful transactions were considered to ensure accuracy in measuring actual customer activity. This included transactions with statuses 'success', 'successful', and 'monnify_success'.
-For each customer, I calculated number of successful transactions, number of active months and average transactions per month
-Using this average, customers were grouped into the buckets:
-'High Frequency' (10+ transactions/month)
-'Medium Frequency' (3–9 transactions/month)
-'Low Frequency' (<3 transactions/month)
+Only successful transactions were considered to ensure accuracy in measuring actual customer activity. This included transactions with statuses 'success', 'successful', and 'monnify_success'. I grouped the query into 2 CTEs to properly capture logic.
+
+1. The first CTE transactions computes the transactional metrics for each of the user.
+For each customer, I calculated number of successful transactions, number of active months.
+
+2. The second CTE customers_category assigns a frequency category and keeps the average transactions per month.
+Customers were grouped into the buckets:
+High Frequency (10+ transactions/month)
+Medium Frequency (3–9 transactions/month)
+Low Frequency (<3 transactions/month)
+
+3. The last query groups by frequency_category to get the count of customers in each group and the average of their average monthly transaction counts.
 
 Why CTE?
 I used a Common Table Expression (CTE) to break the logic into manageable steps:
 
-First, the customer_transactions CTE aggregates transaction counts and active months.
-Then, the main query computes average transactions and assigns a frequency category.
 
 ### Assessment_Q3
 #### Account Inactivity Alert
