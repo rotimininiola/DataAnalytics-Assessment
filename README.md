@@ -13,7 +13,8 @@ To calculate total deposits, I joined the savings_savingsaccount table which act
 
 🚧 Challenges:
 1. Inactive or Deleted Plans: Initially, some plans appeared in the dataset but were not active. I resolved this by filtering out plans where is_deleted = 1.
-2. Understanding Table Roles: There was some confusion between the amount fields in the plans_plan and savings_savingsaccount tables. After exploration, I understood that plans_plan stores metadata about savings/investment plans, while savings_savingsaccount contains transactional data — hence the latter was used for calculating deposits.
+2. Identifying Successful Transactions: Initially, it was not clear how to accurately determine successful transactions in the savings_savingsaccount table due to the large volume of entries and varied status values. To ensure consistency, I filtered transactions using status values that contained the term 'success' (e.g., 'success', 'successful', 'monnify_success').
+3. Understanding Table Roles: There was some confusion between the amount fields in the plans_plan and savings_savingsaccount tables. After exploration, I understood that plans_plan stores metadata about savings/investment plans, while savings_savingsaccount contains transactional data — hence the latter was used for calculating deposits.
 This approach ensures that only active and funded plans are considered, and users are only included in the final result if they have both at least one savings and one investment plan funded. The output is sorted by total_deposit in descending order to highlight high-value customers.
 
 ### Assessment_Q2
