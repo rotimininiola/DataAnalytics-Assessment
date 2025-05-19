@@ -46,12 +46,13 @@ I used a Common Table Expression (CTE) to break the logic into manageable steps:
 #### Account Inactivity Alert
 This query identifies inactive savings and investment plans that have not been funded in the past 365 days.
 
-Inactive Savings and Investments:
+To identify inactive Savings and Investments:
 I used MAX(s.transaction_date) from the savings_savingsaccount table to determine the last time a transaction occurred on both savings and investment plans.
+Regex function was used to include only successful transactions
 Only plans marked as is_regular_savings = 1 and active (is_deleted = 0) were considered for savings. 
 Only plans marked as is_a_fund = 1 for and active (is_deleted = 0) were considered for investments.
 Plans were flagged as inactive if their most recent transaction was over a year ago.
-Regex function was used to include only successful transactions.
+.
 
 🚧 Challenges:
 Identifying the most reliable transaction date as there was a last_charge_date in plans table and transaction_date in savings table
